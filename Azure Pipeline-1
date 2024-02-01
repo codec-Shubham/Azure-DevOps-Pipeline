@@ -1,0 +1,87 @@
+# HTML
+
+# Archive your static HTML project and save it with the build record.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool:
+  name: default
+
+steps:
+- task: ArchiveFiles@2
+  inputs:
+    rootFolderOrFile: '$(build.sourcesDirectory)'
+    includeRootFolder: false
+- task: PublishBuildArtifacts@1
+  inputs:
+        PathtoPublish: '$(Build.ArtifactStagingDirectory)'
+        ArtifactName: 'drop'
+        publishLocation: 'Container'
+
+- task: Docker@2
+  inputs:
+    containerRegistry: 'Dockerhub'
+    repository: 'shubhamdev2001/azuredevops'
+    command: 'buildAndPush'
+    Dockerfile: '**/Dockerfile'
+  
+  
+  ------------------------------------------------------
+  # Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+- master
+
+pool:
+  name: default 
+
+steps:
+- script: echo 'Building Docker image...'
+  displayName: 'Build Step'
+
+- script: |
+    docker build -t shubhamdev2001/my-portfolio:latest .
+  displayName: 'Docker Build'
+
+- script: |
+    docker login -u shubhamdev2001 -p $DOCKER_PASSWORD
+  displayName: 'Docker Login'
+
+- script: |
+    docker push shubhamdev2001/my-portfolio:latest
+  displayName: 'Docker Push'
+
+- script: |
+    docker pull shubhamdev2001/my-portfolio:latest
+  displayName: 'Docker Pull'
+
+- script: |
+    docker run -d -p 8087:80 shubhamdev2001/my-portfolio:latest
+  displayName: 'Docker Run'
+  
+  
+  
+  -------------------------------------------------------------
+  
+  ---
+apiVersion: imgpkg.carvel.dev/v1alpha1
+images:
+- annotations:
+    kbld.carvel.dev/id: shubhamdev2001/chandigarh-ai:latest
+    kbld.carvel.dev/origins: |
+      - resolved:
+          tag: latest
+          url: shubhamdev2001/chandigarh-ai:latest
+  image: index.docker.io/shubhamdev2001/chandigarh-ai@sha256:07163bb052c577d0ad33c0e3b75024d18e2de4ee04c1cf6ab148fa87cbc87558
+kind: ImagesLock
+
+  
+- script: |
+    docker ps 
+  displayName: 'Running Docker Containers'  
